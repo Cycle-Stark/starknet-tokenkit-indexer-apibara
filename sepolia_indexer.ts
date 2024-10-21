@@ -5,11 +5,11 @@ import type {
 } from "@apibara/indexer";
 // import { hash, uint256 } from "https://esm.run/starknet@5.14";
 
-// START FROM 248334
+// START FROM 251638
 
 export const config: Config<NetworkOptions, SinkOptions> = {
     streamUrl: "https://sepolia.starknet.a5a.ch",
-    startingBlock: 248334,
+    startingBlock: 251638,
     network: "starknet",
     finality: "DATA_STATUS_ACCEPTED",
     filter: {

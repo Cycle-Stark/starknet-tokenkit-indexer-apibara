@@ -4,11 +4,11 @@ import type {
     SinkOptions,
 } from "@apibara/indexer";
 
-// START FROM 815227
+// START FROM 820000
 
 export const config: Config<NetworkOptions, SinkOptions> = {
     streamUrl: "https://mainnet.starknet.a5a.ch",
-    startingBlock: 815227,
+    startingBlock: 82000,
     network: "starknet",
     finality: "DATA_STATUS_ACCEPTED",
     filter: {
