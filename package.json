@@ -1,0 +1,16 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@apibara/indexer": "^0.4.1",
+    "@snapshot-labs/checkpoint": "^0.1.0-beta.39",
+    "bignumber.js": "^9.1.2",
+    "fs": "^0.0.1-security",
+    "starknet": "^6.11.0"
+  },
+  "scripts": {
+    "server": "node script.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.1.0"
+  }
+}
