@@ -2,7 +2,11 @@
 
 This is the indexing code for starknet events
 
-Head over to [Apibara](https://app.apibara.com/) and create an account. Generate the `dna` key for your purpose
+## Requirements
+
+1. You will need an indexing key from Apibara - Head over to [Apibara](https://app.apibara.com/) and create an account. Generate the `dna` key and use it below.
+2. Backend setup - To setup your backend, check the `Tokenkit Indexer Backend` Repo to do the setup
+
 
 ## How to run for both Mainnet and Sepolia
 
