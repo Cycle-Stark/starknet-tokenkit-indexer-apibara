@@ -5,11 +5,11 @@ import type {
 } from "@apibara/indexer";
 // import { hash, uint256 } from "https://esm.run/starknet@5.14";
 
-// START FROM 251638
+// START FROM 251782
 
 export const config: Config<NetworkOptions, SinkOptions> = {
     streamUrl: "https://sepolia.starknet.a5a.ch",
-    startingBlock: 251638,
+    startingBlock: 270206,
     network: "starknet",
     finality: "DATA_STATUS_ACCEPTED",
     filter: {
@@ -31,7 +31,7 @@ export const config: Config<NetworkOptions, SinkOptions> = {
     sinkType: "webhook",
     // sinkType: "console",
     sinkOptions: {
-        targetUrl: "http://sepolia.localhost:8000/api/receive-rawdata/",
+        targetUrl: String(Deno.env.get("SEPOLIA_WEBHOOK_ENDPOINT")),
         raw: true
     },
 };

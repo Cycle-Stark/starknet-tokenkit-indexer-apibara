@@ -4,11 +4,11 @@ import type {
     SinkOptions,
 } from "@apibara/indexer";
 
-// START FROM 820000
+// START FROM 820213
 
 export const config: Config<NetworkOptions, SinkOptions> = {
     streamUrl: "https://mainnet.starknet.a5a.ch",
-    startingBlock: 82000,
+    startingBlock: 845634,
     network: "starknet",
     finality: "DATA_STATUS_ACCEPTED",
     filter: {
@@ -29,7 +29,7 @@ export const config: Config<NetworkOptions, SinkOptions> = {
     sinkType: "webhook",
     // sinkType: "console",
     sinkOptions: {
-        targetUrl: "http://mainnet.localhost:8000/api/receive-rawdata/",
+        targetUrl: String(Deno.env.get("MAINNET_WEBHOOK_ENDPOINT")),
         raw: true
     },
 };

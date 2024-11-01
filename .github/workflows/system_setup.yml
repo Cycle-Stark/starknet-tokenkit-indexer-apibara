@@ -1,0 +1,88 @@
+name: Tokenkit Indexer system setup
+
+on:
+#  push:
+#    branches:
+#      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install sops
+        run: |
+          curl -Lo sops https://github.com/mozilla/sops/releases/download/v3.9.0/sops-v3.9.0.linux.amd64
+          chmod +x sops
+          sudo mv sops /usr/local/bin/sops
+
+      - name: Set up age for decryption
+        run: |
+          mkdir -p ~/.config/sops/age
+          echo "${{ secrets.AGE_PRIVATE_KEY }}" > ~/.config/sops/age/keys.txt
+
+      - name: Decrypt .env file
+        run: sops --decrypt secret.env > .env
+
+      - name: Install SSH Client
+        run: sudo apt-get install -y sshpass
+
+      - name: Transfer files to contabo
+        uses: appleboy/scp-action@v0.1.6
+        with:
+          host: ${{ env.CONTABO_IP }}
+          username: root
+          key: ${{ env.CONTABO_SSH_KEY }}
+          source: "."
+          target: "/home/starknet_indexer/"
+        env:
+          CONTABO_IP: ${{ secrets.CONTABO_HOST }}
+          CONTABO_SSH_KEY: ${{ secrets.CONTABO_SSH_KEY }}
+
+      - name: Setup Indexer
+        env:
+          VPS_PASSWORD: ${{ secrets.CONTABO_PASSWORD }}
+        run: |
+          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no ${{ secrets.CONTABO_USER }}@${{ secrets.CONTABO_HOST }} << 'EOF'
+            # Navigate to indexer directory
+            cd "/home/starknet_indexer/"
+
+            pnpm install
+
+            # Create Starknet Mainnet Indexer systemd service
+            echo "[Unit]
+            Description=Starknet Indexer
+            After=network.target
+            [Service]
+            User=root
+            Group=root
+            WorkingDirectory=/home/starknet_indexer/
+            Restart=always
+            ExecStart=apibara run --allow-env=.env mainnet_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_mainnet
+            [Install]
+            WantedBy=multi-user.target" | sudo tee /etc/systemd/system/starknet_indexer_mainnet.service
+
+            # Create Starknet Sepolia Indexer systemd service
+            echo "[Unit]
+            Description=Starknet Indexer
+            After=network.target
+            [Service]
+            User=root
+            Group=root
+            WorkingDirectory=/home/starknet_indexer/
+            Restart=always
+            ExecStart=apibara run --allow-env=.env sepolia_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_mainnet
+            [Install]
+            WantedBy=multi-user.target" | sudo tee /etc/systemd/system/starknet_indexer_sepolia.service
+
+            # Enable and start services
+            sudo systemctl daemon-reload
+            sudo systemctl enable starknet_indexer_sepolia starknet_indexer_mainnet
+            sudo systemctl start starknet_indexer_sepolia starknet_indexer_mainnet
+
+            exit 0  # Exit from SSH session
+          EOF
