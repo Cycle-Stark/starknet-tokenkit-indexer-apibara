@@ -54,7 +54,8 @@ jobs:
             pnpm install
 
             #  Restart services
-            sudo systemctl start starknet_indexer_sepolia starknet_indexer_mainnet
+            nohup apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/mainnet_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_mainnet &
+            nohup apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/sepolia_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_sepolia &
 
             exit 0  # Exit from SSH session
           EOF
