@@ -53,38 +53,8 @@ jobs:
 
             pnpm install
 
-            # Create Starknet Mainnet Indexer systemd service
-            echo "
-            [Unit]
-            Description=Starknet Indexer
-            After=network.target
-            [Service]
-            User=root
-            Group=root
-            WorkingDirectory=/home/starknet_indexer/
-            Restart=always
-            ExecStart=apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/mainnet_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_mainnet
-            [Install]
-            WantedBy=multi-user.target" | sudo tee /etc/systemd/system/starknet_indexer_mainnet.service
-
-            # Create Starknet Sepolia Indexer systemd service
-            echo "
-            [Unit]
-            Description=Starknet Indexer
-            After=network.target
-            [Service]
-            User=root
-            Group=root
-            WorkingDirectory=/home/starknet_indexer/
-            Restart=always
-            ExecStart=apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/sepolia_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_mainnet
-            [Install]
-            WantedBy=multi-user.target" | sudo tee /etc/systemd/system/starknet_indexer_sepolia.service
-
-            # Enable and start services
-            sudo systemctl daemon-reload
-            sudo systemctl enable starknet_indexer_sepolia starknet_indexer_mainnet
-            sudo systemctl start starknet_indexer_sepolia starknet_indexer_mainnet
+            nohup apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/mainnet_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_mainnet &
+            nohup apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/sepolia_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_sepolia &
 
             exit 0  # Exit from SSH session
           EOF

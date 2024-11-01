@@ -12,6 +12,12 @@ This is the indexing code for starknet events
 
 Complete run script for mainnet and sepolia
 
+Install the sink webhook plugin
+
+```shel
+apibara plugins install sink-webhook
+```
+
 ### Mainnet
 
 ```bash
