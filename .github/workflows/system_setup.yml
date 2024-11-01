@@ -77,7 +77,7 @@ jobs:
             Group=root
             WorkingDirectory=/home/starknet_indexer/
             Restart=always
-            ExecStart=/root/.local/share/apibara/bin/apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/sepolia_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_mainnet
+            ExecStart=/root/.local/share/apibara/bin/apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/sepolia_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_sepolia
             [Install]
             WantedBy=multi-user.target" | sudo tee /etc/systemd/system/starknet_indexer_sepolia.service
 
