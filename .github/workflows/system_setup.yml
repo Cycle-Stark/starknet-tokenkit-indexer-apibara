@@ -54,7 +54,8 @@ jobs:
             pnpm install
 
             # Create Starknet Mainnet Indexer systemd service
-            echo "[Unit]
+            echo "
+            [Unit]
             Description=Starknet Indexer
             After=network.target
             [Service]
@@ -62,12 +63,13 @@ jobs:
             Group=root
             WorkingDirectory=/home/starknet_indexer/
             Restart=always
-            ExecStart=apibara run --allow-env=.env /home/starknet_indexer/mainnet_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_mainnet
+            ExecStart=apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/mainnet_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_mainnet
             [Install]
             WantedBy=multi-user.target" | sudo tee /etc/systemd/system/starknet_indexer_mainnet.service
 
             # Create Starknet Sepolia Indexer systemd service
-            echo "[Unit]
+            echo "
+            [Unit]
             Description=Starknet Indexer
             After=network.target
             [Service]
@@ -75,7 +77,7 @@ jobs:
             Group=root
             WorkingDirectory=/home/starknet_indexer/
             Restart=always
-            ExecStart=apibara run --allow-env=.env /home/starknet_indexer/sepolia_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_mainnet
+            ExecStart=apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/sepolia_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_mainnet
             [Install]
             WantedBy=multi-user.target" | sudo tee /etc/systemd/system/starknet_indexer_sepolia.service
 
