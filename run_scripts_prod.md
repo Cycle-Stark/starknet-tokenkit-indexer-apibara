@@ -16,7 +16,7 @@ nohup apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer
 1. Identify the specific port
 
 ```shell
-ps aux | grep "apibara some-key somefile.ts"
+ps aux | grep "apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/sepolia_indexer.ts"
 ```
 
 2. Kill the port
