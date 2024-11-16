@@ -38,7 +38,7 @@ jobs:
           username: root
           key: ${{ env.CONTABO_SSH_KEY }}
           source: "."
-          target: "/home/starknet_indexer/"
+          target: "/home/starknet_indexer_v1/"
         env:
           CONTABO_IP: ${{ secrets.CONTABO_HOST }}
           CONTABO_SSH_KEY: ${{ secrets.CONTABO_SSH_KEY }}
@@ -49,12 +49,12 @@ jobs:
         run: |
           sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no ${{ secrets.CONTABO_USER }}@${{ secrets.CONTABO_HOST }} << 'EOF'
             # Navigate to indexer directory
-            cd "/home/starknet_indexer/"
+            cd "/home/starknet_indexer_v1/"
 
             pnpm install
 
             #  Restart services
-            sudo systemctl start starknet_indexer_sepolia starknet_indexer_mainnet
+            sudo systemctl start starknet_indexer_sepolia_v1 starknet_indexer_mainnet_v1
 
             exit 0  # Exit from SSH session
           EOF

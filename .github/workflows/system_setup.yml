@@ -26,7 +26,13 @@ jobs:
           echo "${{ secrets.AGE_PRIVATE_KEY }}" > ~/.config/sops/age/keys.txt
 
       - name: Decrypt .env file
-        run: sops --decrypt secret.env > .env
+        run: |
+          sops --decrypt mainnet.secret.env > .mainnet.env
+          sops --decrypt sepolia.secret.env > .sepolia.env
+
+          sops --decrypt tokenkit_mainnet.secret.env > .tokenkit_mainnet.env
+          sops --decrypt tokenkit_sepolia.secret.env > .tokenkit_sepolia.env
+
 
       - name: Install SSH Client
         run: sudo apt-get install -y sshpass
@@ -38,7 +44,7 @@ jobs:
           username: root
           key: ${{ env.CONTABO_SSH_KEY }}
           source: "."
-          target: "/home/starknet_indexer/"
+          target: "/home/starknet_indexer_v2/"
         env:
           CONTABO_IP: ${{ secrets.CONTABO_HOST }}
           CONTABO_SSH_KEY: ${{ secrets.CONTABO_SSH_KEY }}
@@ -46,45 +52,79 @@ jobs:
       - name: Setup Indexer
         env:
           VPS_PASSWORD: ${{ secrets.CONTABO_PASSWORD }}
+
         run: |
           sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no ${{ secrets.CONTABO_USER }}@${{ secrets.CONTABO_HOST }} << 'EOF'
+          
+            export INDEXER_IDENTIFIER="starknet_indexer_v2"
+
             # Navigate to indexer directory
-            cd "/home/starknet_indexer/"
+            cd "/home/$INDEXER_IDENTIFIER/"
 
             pnpm install
 
-            # Create Starknet Mainnet Indexer systemd service
+            # Create the templated Starknet Indexer (To index transfer events) systemd service
             echo "
             [Unit]
-            Description=Starknet Indexer
+            Description=Starknet Indexer (%i)
             After=network.target
-            [Service]
-            User=root
-            Group=root
-            WorkingDirectory=/home/starknet_indexer/
-            Restart=always
-            ExecStart=/root/.local/share/apibara/bin/apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/mainnet_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_mainnet
-            [Install]
-            WantedBy=multi-user.target" | sudo tee /etc/systemd/system/starknet_indexer_mainnet.service
 
-            # Create Starknet Sepolia Indexer systemd service
-            echo "
-            [Unit]
-            Description=Starknet Indexer
-            After=network.target
             [Service]
             User=root
             Group=root
-            WorkingDirectory=/home/starknet_indexer/
+            WorkingDirectory=/home/$INDEXER_IDENTIFIER/
             Restart=always
-            ExecStart=/root/.local/share/apibara/bin/apibara run --allow-env=/home/starknet_indexer/.env /home/starknet_indexer/sepolia_indexer.ts -A ${{secrets.APIBARA_DNA_KEY}} --persist-to-redis redis://localhost:6379 --sink-id starknet_sepolia
+            ExecStart=/root/.local/share/apibara/bin/apibara run \
+                --allow-env=/home/$INDEXER_IDENTIFIER/.%i.env \
+                /home/$INDEXER_IDENTIFIER/transfers_indexer.ts \
+                -A \${secrets.APIBARA_DNA_KEY} \
+                --persist-to-fs /home/$INDEXER_IDENTIFIER/apibara_store \
+                --sink-id starknet_%i
+
             [Install]
-            WantedBy=multi-user.target" | sudo tee /etc/systemd/system/starknet_indexer_sepolia.service
+            WantedBy=multi-user.target
+            " | sudo tee /etc/systemd/system/\${INDEXER_IDENTIFIER}_transfers.service > /dev/null
+
+            # Create the templated Starknet Tokenkit Indexer (To index tokenkit contract events) systemd service
+            echo "
+            [Unit]
+            Description=Tokenkit Indexer (%i)
+            After=network.target
+
+            [Service]
+            User=root
+            Group=root
+            WorkingDirectory=/home/$INDEXER_IDENTIFIER/
+            Restart=always
+            ExecStart=/root/.local/share/apibara/bin/apibara run \
+                --allow-env=/home/$INDEXER_IDENTIFIER/.%i.env \
+                /home/$INDEXER_IDENTIFIER/tokenkit_indexer.ts \
+                -A \${secrets.APIBARA_DNA_KEY} \
+                --persist-to-fs /home/$INDEXER_IDENTIFIER/apibara_store \
+                --sink-id starknet_%i
+
+            [Install]
+            WantedBy=multi-user.target
+            " | sudo tee /etc/systemd/system/\${INDEXER_IDENTIFIER}_tokenkit.service > /dev/null
+
 
             # Enable and start services
             sudo systemctl daemon-reload
-            sudo systemctl enable starknet_indexer_sepolia starknet_indexer_mainnet
-            sudo systemctl start starknet_indexer_sepolia starknet_indexer_mainnet
+
+            sudo systemctl enable ${INDEXER_IDENTIFIER}_transfers@mainnet.service
+            sudo systemctl enable ${INDEXER_IDENTIFIER}_transfers@sepolia.service
+
+            sudo systemctl enable ${INDEXER_IDENTIFIER}_tokenkit@tokenkit_mainnet.service
+            sudo systemctl enable ${INDEXER_IDENTIFIER}_tokenkit@tokenkit_sepolia.service
+
+
+            # Start the services
+            sudo systemctl start ${INDEXER_IDENTIFIER}_transfers@mainnet.service
+            sudo systemctl start ${INDEXER_IDENTIFIER}_transfers@sepolia.service
+
+            sudo systemctl start ${INDEXER_IDENTIFIER}_tokenkit@tokenkit_mainnet.service
+            sudo systemctl start ${INDEXER_IDENTIFIER}_tokenkit@tokenkit_sepolia.service
+           
 
             exit 0  # Exit from SSH session
           EOF
