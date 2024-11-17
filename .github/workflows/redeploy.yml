@@ -26,7 +26,13 @@ jobs:
           echo "${{ secrets.AGE_PRIVATE_KEY }}" > ~/.config/sops/age/keys.txt
 
       - name: Decrypt .env file
-        run: sops --decrypt secret.env > .env
+        run: |
+          sops --decrypt mainnet.secret.env > .mainnet.env
+          sops --decrypt sepolia.secret.env > .sepolia.env
+
+          sops --decrypt tokenkit_mainnet.secret.env > .tokenkit_mainnet.env
+          sops --decrypt tokenkit_sepolia.secret.env > .tokenkit_sepolia.env
+
 
       - name: Install SSH Client
         run: sudo apt-get install -y sshpass
@@ -38,7 +44,7 @@ jobs:
           username: root
           key: ${{ env.CONTABO_SSH_KEY }}
           source: "."
-          target: "/home/starknet_indexer_v1/"
+          target: "/home/starknet_indexer_v2/"
         env:
           CONTABO_IP: ${{ secrets.CONTABO_HOST }}
           CONTABO_SSH_KEY: ${{ secrets.CONTABO_SSH_KEY }}
@@ -48,13 +54,21 @@ jobs:
           VPS_PASSWORD: ${{ secrets.CONTABO_PASSWORD }}
         run: |
           sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no ${{ secrets.CONTABO_USER }}@${{ secrets.CONTABO_HOST }} << 'EOF'
+
+            export INDEXER_IDENTIFIER="starknet_indexer_v2"
+
             # Navigate to indexer directory
-            cd "/home/starknet_indexer_v1/"
+            cd "/home/$$INDEXER_IDENTIFIER/"
 
             pnpm install
 
             #  Restart services
-            sudo systemctl start starknet_indexer_sepolia_v1 starknet_indexer_mainnet_v1
+            # Start the services
+            sudo systemctl resstart ${INDEXER_IDENTIFIER}_transfers@mainnet.service
+            sudo systemctl resstart ${INDEXER_IDENTIFIER}_transfers@sepolia.service
+
+            sudo systemctl resstart ${INDEXER_IDENTIFIER}_tokenkit@tokenkit_mainnet.service
+            sudo systemctl resstart ${INDEXER_IDENTIFIER}_tokenkit@tokenkit_sepolia.service
 
             exit 0  # Exit from SSH session
           EOF

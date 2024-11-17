@@ -59,7 +59,9 @@ jobs:
             export INDEXER_IDENTIFIER="starknet_indexer_v2"
 
             # Navigate to indexer directory
-            cd "/home/$INDEXER_IDENTIFIER/"
+            cd /home/$INDEXER_IDENTIFIER/
+
+            pwd
 
             pnpm install
 
@@ -83,7 +85,7 @@ jobs:
 
             [Install]
             WantedBy=multi-user.target
-            " | sudo tee /etc/systemd/system/\${INDEXER_IDENTIFIER}_transfers.service > /dev/null
+            " | sudo tee /etc/systemd/system/${INDEXER_IDENTIFIER}_transfers.service > /dev/null
 
             # Create the templated Starknet Tokenkit Indexer (To index tokenkit contract events) systemd service
             echo "
@@ -105,7 +107,7 @@ jobs:
 
             [Install]
             WantedBy=multi-user.target
-            " | sudo tee /etc/systemd/system/\${INDEXER_IDENTIFIER}_tokenkit.service > /dev/null
+            " | sudo tee /etc/systemd/system/${INDEXER_IDENTIFIER}_tokenkit.service > /dev/null
 
 
             # Enable and start services
