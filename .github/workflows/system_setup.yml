@@ -81,9 +81,9 @@ jobs:
                 /home/$INDEXER_IDENTIFIER/transfers_indexer.ts \
                 -A ${{ secrets.APIBARA_DNA_KEY }} \
                 --persist-to-fs /home/$INDEXER_IDENTIFIER/apibara_store \
-                --sink-id starknet_%i
-                --allow-read=
-                --allow-write=
+                --sink-id starknet_%i \
+                --allow-read= \
+                --allow-write= \
 
             [Install]
             WantedBy=multi-user.target
@@ -105,9 +105,9 @@ jobs:
                 /home/$INDEXER_IDENTIFIER/tokenkit_indexer.ts \
                 -A ${{ secrets.APIBARA_DNA_KEY }} \
                 --persist-to-fs /home/$INDEXER_IDENTIFIER/apibara_store \
-                --sink-id starknet_%i
-                --allow-read=
-                --allow-write=
+                --sink-id starknet_%i \
+                --allow-read= \
+                --allow-write= \
 
             [Install]
             WantedBy=multi-user.target
