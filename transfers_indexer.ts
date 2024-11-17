@@ -62,7 +62,7 @@ function removeLeadingZeros(hexString: string): string {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export default function transform(block: any) {
-    console.log(block)
+    
     let events: any[] = block.events
     let transferEventSelector = hash.getSelectorFromName("Transfer")
     let transactions: any[] = []
