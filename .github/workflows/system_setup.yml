@@ -79,7 +79,7 @@ jobs:
             ExecStart=/root/.local/share/apibara/bin/apibara run \
                 --allow-env=/home/$INDEXER_IDENTIFIER/.%i.env \
                 /home/$INDEXER_IDENTIFIER/transfers_indexer.ts \
-                -A \${secrets.APIBARA_DNA_KEY} \
+                -A ${{secrets.APIBARA_DNA_KEY}} \
                 --persist-to-fs /home/$INDEXER_IDENTIFIER/apibara_store \
                 --sink-id starknet_%i
 
@@ -101,7 +101,7 @@ jobs:
             ExecStart=/root/.local/share/apibara/bin/apibara run \
                 --allow-env=/home/$INDEXER_IDENTIFIER/.%i.env \
                 /home/$INDEXER_IDENTIFIER/tokenkit_indexer.ts \
-                -A \${secrets.APIBARA_DNA_KEY} \
+                -A ${{secrets.APIBARA_DNA_KEY}} \
                 --persist-to-fs /home/$INDEXER_IDENTIFIER/apibara_store \
                 --sink-id starknet_%i
 
