@@ -70,3 +70,6 @@ Run the decryption command
 ```shell
 sops --decrypt secret.env > .env1
 ```
+
+
+apibara run --allow-env=.mainnet.env --allow-net= transfers_indexer.ts -A dna_9PRiUYPdKJcwLybf5cXm --persist-to-fs /home/dalmas/E/blockchain/starknet/apibara  --sink-id mainnet_indexer

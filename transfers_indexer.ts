@@ -62,11 +62,12 @@ function removeLeadingZeros(hexString: string): string {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export default function transform(block: any) {
+    console.log(block)
     let events: any[] = block.events
     let transferEventSelector = hash.getSelectorFromName("Transfer")
     let transactions: any[] = []
 
-    events.forEach((ev: any) => {
+    events?.forEach((ev: any) => {
 
         /* 
             Join the two arrays together that is the keys array and Data array. 

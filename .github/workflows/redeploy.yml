@@ -63,6 +63,7 @@ jobs:
             pnpm install
 
             # Restart the services
+            sudo systemctl daemon-reload
             sudo systemctl restart "$INDEXER_IDENTIFIER"_transfers@mainnet.service
             sudo systemctl restart "$INDEXER_IDENTIFIER"_transfers@sepolia.service
 
