@@ -15,7 +15,7 @@ export const config: Config<NetworkOptions, SinkOptions> = {
     //@ts-ignore
     streamUrl: String(Deno.env.get("STREAM_URL")),
     //@ts-ignore
-    startingBlock: String(Deno.env.get("STARTING_BLOCK")),
+    startingBlock: Number(Deno.env.get("STARTING_BLOCK")),
     network: "starknet",
     finality: "DATA_STATUS_ACCEPTED",
     filter: {
