@@ -58,17 +58,16 @@ jobs:
             export INDEXER_IDENTIFIER="starknet_indexer_v2"
 
             # Navigate to indexer directory
-            cd "/home/$$INDEXER_IDENTIFIER/"
+            cd /home/$INDEXER_IDENTIFIER/
 
             pnpm install
 
-            #  Restart services
-            # Start the services
-            sudo systemctl resstart ${INDEXER_IDENTIFIER}_transfers@mainnet.service
-            sudo systemctl resstart ${INDEXER_IDENTIFIER}_transfers@sepolia.service
+            # Restart the services
+            sudo systemctl restart "$INDEXER_IDENTIFIER"_transfers@mainnet.service
+            sudo systemctl restart "$INDEXER_IDENTIFIER"_transfers@sepolia.service
 
-            sudo systemctl resstart ${INDEXER_IDENTIFIER}_tokenkit@tokenkit_mainnet.service
-            sudo systemctl resstart ${INDEXER_IDENTIFIER}_tokenkit@tokenkit_sepolia.service
+            sudo systemctl restart "$INDEXER_IDENTIFIER"_tokenkit@tokenkit_mainnet.service
+            sudo systemctl restart "$INDEXER_IDENTIFIER"_tokenkit@tokenkit_sepolia.service
 
             exit 0  # Exit from SSH session
           EOF
