@@ -85,7 +85,7 @@ jobs:
 
             [Install]
             WantedBy=multi-user.target
-            " | sudo tee /etc/systemd/system/"$INDEXER_IDENTIFIER"_transfers.service > /dev/null
+            " | sudo tee /etc/systemd/system/"$INDEXER_IDENTIFIER"_transfers@.service > /dev/null
 
             # Create the templated Starknet Tokenkit Indexer (To index tokenkit contract events) systemd service
             echo "
@@ -107,7 +107,7 @@ jobs:
 
             [Install]
             WantedBy=multi-user.target
-            " | sudo tee /etc/systemd/system/"$INDEXER_IDENTIFIER"_tokenkit.service > /dev/null
+            " | sudo tee /etc/systemd/system/"$INDEXER_IDENTIFIER"_tokenkit@.service > /dev/null
 
 
             # Enable and start services
