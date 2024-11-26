@@ -47,7 +47,7 @@ apibara run --allow-env=.env --allow-net= tokenkit_sepolia_indexer.ts -A dna_***
 ### Starknet Transfer events mainnet indexer
 
 ```bash
-apibara run --allow-env=.env --allow-net= mainnet_indexer.ts -A dna_**** --persist-to-fs /home/dalmas/E/blockchain/starknet/apibara  --sink-id mainnet_indexer
+# apibara run --allow-env=.env --allow-net= transfers_indexer.ts -A dna_9PRiUYPdKJcwLybf5cXm --persist-to-fs /home/dalmas/E/blockchain/starknet/apibara  --sink-id mainnet_indexer
 ````
 
 Encrypt .env:
