@@ -31,8 +31,8 @@ export const config: Config<NetworkOptions, SinkOptions> = {
             },
         ]
     },
-    // sinkType: "webhook",
-    sinkType: "console",
+    sinkType: "webhook",
+    // sinkType: "console",
     sinkOptions: {
         // @ts-ignore
         targetUrl: String(Deno.env.get("WEBHOOK_ENDPOINT")),
