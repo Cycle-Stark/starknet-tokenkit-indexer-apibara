@@ -138,25 +138,29 @@ export default function transform(block: any) {
     const transactions: Array<{ token: string; from: string; to: string; value: number; txhash: string; timestamp: number }> = [];
     const timestamp = block?.header?.timestamp;
 
-    for (const ev of block.events) {
-        // const keys = ev?.event?.keys ?? [];
-        // const data = ev?.event?.data ?? [];
+    if (block.events) {
 
-        // Check if we have the correct number of keys/data
-        let transferEventData = [...(ev?.event?.keys ?? []), ...(ev?.event?.data ?? [])]
-        if (transferEventData.length === 5 &&
-            removeLeadingZeros(transferEventData[0]) === removeLeadingZeros(transferEventSelector)) {
+        for (const ev of block.events) {
+            // const keys = ev?.event?.keys ?? [];
+            // const data = ev?.event?.data ?? [];
 
-            transactions.push({
-                token: ev.event.fromAddress,
-                from: transferEventData[1],
-                to: transferEventData[2],
-                value: converUint256ToNum(transferEventData[3], transferEventData[4]),
-                txhash: ev?.receipt?.transactionHash ?? "-",
-                timestamp: timestamp,
-            });
+            // Check if we have the correct number of keys/data
+            let transferEventData = [...(ev?.event?.keys ?? []), ...(ev?.event?.data ?? [])]
+            if (transferEventData.length === 5 &&
+                removeLeadingZeros(transferEventData[0]) === removeLeadingZeros(transferEventSelector)) {
+
+                transactions.push({
+                    token: ev.event.fromAddress,
+                    from: transferEventData[1],
+                    to: transferEventData[2],
+                    value: converUint256ToNum(transferEventData[3], transferEventData[4]),
+                    txhash: ev?.receipt?.transactionHash ?? "-",
+                    timestamp: timestamp,
+                });
+            }
         }
-    }
 
-    return transactions;
+        return transactions;
+    }
+    return []
 }
