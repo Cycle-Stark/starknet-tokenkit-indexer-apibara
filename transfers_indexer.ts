@@ -158,7 +158,7 @@ export default function transform(block: any) {
                     token: ev.event.fromAddress,
                     from: transferEventData[1],
                     to: transferEventData[2],
-                    value: converUint256ToNum(transferEventData[3], transferEventData[4]),
+                    value: converUint256ToNum(transferEventData[3] ?? 0, transferEventData[4] ?? 0),
                     txhash: ev?.receipt?.transactionHash ?? "-",
                     timestamp: timestamp,
                 });
