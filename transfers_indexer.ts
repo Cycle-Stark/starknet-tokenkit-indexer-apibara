@@ -138,9 +138,9 @@ export default function transform(block: any) {
     const transactions: Array<{ token: string; from: string; to: string; value: number; txhash: string; timestamp: number }> = [];
     const timestamp = block?.header?.timestamp;
 
-    if (block.events) {
+    if (block?.events) {
 
-        for (const ev of block.events) {
+        for (const ev of block?.events) {
             // const keys = ev?.event?.keys ?? [];
             // const data = ev?.event?.data ?? [];
 
