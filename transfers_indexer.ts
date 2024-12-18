@@ -43,16 +43,22 @@ export const config: Config<NetworkOptions, SinkOptions> = {
 
 // Helper function to help convert a uint256 to a normal number using BignumberJs
 function converUint256ToNum(low: string, high: string) {
-    if (low && high){
-        let uint = new CairoUint256({
-            low,
-            high
-        })
-        
-        return BigNumber(uint.toBigInt()).toString()
+    try {
+        if (low && high) {
+            let uint = new CairoUint256({
+                low,
+                high
+            })
+
+            return BigNumber(uint.toBigInt()).toString()
+        }
+        else {
+            return low || high || 0
+        }
     }
-    else{
-        return low || high || 0
+    catch (error) {
+        console.log("Conversion Error: ", low, high, error)
+        return 0
     }
 }
 
