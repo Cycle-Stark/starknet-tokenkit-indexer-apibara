@@ -6,8 +6,9 @@ import { Block } from "@apibara/starknet";
 /**
  * Configuration options for the webhook plugin.
  * @interface WebhookPluginOptions
+ * @template T The type of data that will be returned by the transform function
  */
-export interface WebhookPluginOptions {
+export interface WebhookPluginOptions<T = any> {
     /**
      * The URL of the webhook endpoint to send data to
      */
@@ -20,6 +21,7 @@ export interface WebhookPluginOptions {
 
     /**
      * Optional function to transform the data before sending it to the webhook
+     * @template T The type of data that will be returned by the transform function
      */
     transformData?: (args: {
         block: Block;
@@ -27,7 +29,7 @@ export interface WebhookPluginOptions {
         endCursor?: Cursor | undefined;
         finality: DataFinality;
         context: any;
-    }) => any;
+    }) => T;
 
     /**
      * Whether to send data on every message or only on finalized blocks
@@ -60,8 +62,9 @@ export interface WebhookPluginOptions {
  * Interface for the webhook plugin instance stored in context.
  * This provides methods for sending data to a webhook endpoint.
  * @interface WebhookPlugin
+ * @template T The type of data that will be returned by the transform function
  */
-export interface WebhookPlugin {
+export interface WebhookPlugin<T = any> {
     /**
      * The URL of the webhook endpoint
      */
@@ -81,14 +84,14 @@ export interface WebhookPlugin {
         endCursor?: Cursor | undefined;
         finality: DataFinality;
         context: any;
-    }) => any;
+    }) => T;
 
     /**
      * Send data to the webhook endpoint
      * @param data The data to send to the webhook
      * @returns A promise that resolves with the result of the webhook request
      */
-    sendData: (data: any) => Promise<{ success: boolean; status?: number; body?: string; error?: string; }>;
+    sendData: (data: T) => Promise<{ success: boolean; status?: number; body?: string; error?: string; }>;
 }
 
 /**
@@ -99,18 +102,36 @@ export interface WebhookPlugin {
  * 
  * @example
  * ```typescript
+ * // Basic usage
  * webhookPlugin({
  *   url: 'https://example.com/webhook',
  *   headers: { 'Authorization': 'Bearer token' },
  *   sendOnEveryMessage: true,
  *   retry: { maxAttempts: 5, delayMs: 2000 }
  * })
+ * 
+ * // With type-safe transform function
+ * interface TransferData {
+ *   blockNumber: string;
+ *   timestamp: string;
+ *   transfers: Array<{token: string, from: string, to: string, value: string}>
+ * }
+ * 
+ * webhookPlugin<TransferData>({
+ *   url: 'https://example.com/webhook',
+ *   transformData: ({block}) => ({
+ *     blockNumber: block.header.blockNumber.toString(),
+ *     timestamp: block.header.timestamp.toISOString(),
+ *     transfers: []
+ *   })
+ * })
  * ```
  * 
- * @param {WebhookPluginOptions} options - Configuration options for the webhook plugin
+ * @template T The type of data that will be returned by the transform function
+ * @param {WebhookPluginOptions<T>} options - Configuration options for the webhook plugin
  * @returns {Function} An Apibara indexer plugin that sends data to a webhook endpoint
  */
-export function webhookPlugin(options: WebhookPluginOptions) {
+export function webhookPlugin<T = any>(options: WebhookPluginOptions<T>) {
     const {
         url,
         headers = {},
@@ -134,7 +155,7 @@ export function webhookPlugin(options: WebhookPluginOptions) {
                 url,
                 headers,
                 transformData,
-                sendData: async (data: any) => {
+                sendData: async (data: T) => {
                     return sendToWebhook(data);
                 }
             };
@@ -241,19 +262,33 @@ export function webhookPlugin(options: WebhookPluginOptions) {
  * 
  * @example
  * ```typescript
+ * // Basic usage
  * const webhook = useWebhook();
  * await webhook.sendData({ key: 'value' });
+ * 
+ * // With type safety
+ * interface TransferData {
+ *   blockNumber: string;
+ *   transfers: Array<{token: string, from: string, to: string}>
+ * }
+ * 
+ * const webhook = useWebhook<TransferData>();
+ * await webhook.sendData({
+ *   blockNumber: '123',
+ *   transfers: [{ token: '0x123', from: '0x456', to: '0x789' }]
+ * });
  * ```
  * 
+ * @template T The type of data that will be sent to the webhook
  * @throws {Error} If the webhook plugin is not available in context
- * @returns {WebhookPlugin} The webhook plugin instance with methods to send data
+ * @returns {WebhookPlugin<T>} The webhook plugin instance with methods to send data
  */
-export function useWebhook(): WebhookPlugin {
+export function useWebhook<T = any>(): WebhookPlugin<T> {
     const ctx = useIndexerContext();
 
     if (!ctx?.webhookPlugin) {
         throw new Error("Webhook plugin is not available in context");
     }
 
-    return ctx.webhookPlugin as WebhookPlugin;
+    return ctx.webhookPlugin as WebhookPlugin<T>;
 }

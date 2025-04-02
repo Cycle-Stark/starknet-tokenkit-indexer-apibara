@@ -35,6 +35,9 @@ const abi = [
   },
 ] satisfies Abi;
 
+/**
+ * Represents a token transfer event
+ */
 export interface Transfer {
   token: string;
   from: string;
@@ -45,6 +48,15 @@ export interface Transfer {
   block: string;
   status: string;
   fee: string;
+}
+
+/**
+ * Represents the transformed data structure sent to the webhook
+ */
+export interface WebhookTransformedData {
+  blockNumber: string;
+  timestamp: string;
+  transfers: Transfer[];
 }
 
 // Extend the runtime config type to include webhookUrl and persistToRedis
@@ -84,8 +96,7 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
       }),
 
       // Add webhook plugin to send transfer events to a webhook endpoint
-      // @ts-ignore - Type compatibility issues with generic plugins
-      webhookPlugin({
+      webhookPlugin<WebhookTransformedData>({
         url: webhookUrl!!,
         // Send data for both regular messages and finalized blocks for debugging
         sendOnEveryMessage: true,
@@ -124,8 +135,9 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
             }
           }
 
+          // Return typed data structure
           return {
-            blockNumber:blockNumber,
+            blockNumber: blockNumber,
             timestamp: timestamp,
             transfers,
           };
@@ -151,7 +163,7 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
   });
 }
 
-function getActualFee(receipt: TransactionReceipt) {
+function getActualFee(receipt: TransactionReceipt): string {
   try {
     // FILL ME: decide what to do if fee is ETH.
     return BigInt(receipt.meta.actualFee.amount).toString();
