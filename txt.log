@@ -1,0 +1,5 @@
+yarn run v1.22.22
+$ npx dotenv -e .mainnet.env apibara dev --preset mainnet
+[apibara] ✔ Output directory .apibara/build cleaned
+[apibara] ✔ Types written to .apibara/types
+[apibara] ◐ Setting up a dev server

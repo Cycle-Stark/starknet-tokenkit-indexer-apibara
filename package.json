@@ -1,0 +1,28 @@
+{
+  "name": "apibara-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "apibara prepare",
+    "dev:mainnet": "npx dotenv -e .mainnet.env apibara dev --preset mainnet",
+    "dev:sepolia": "npx dotenv -e .sepolia.env apibara dev --preset sepolia",
+    "start": "apibara start",
+    "build": "apibara build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@apibara/indexer": "next",
+    "@apibara/protocol": "next",
+    "@apibara/starknet": "next",
+    "apibara": "next",
+    "ioredis": "^5.6.0",
+    "starknet": "^6.24.1",
+    "superjson": "^2.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.2",
+    "dotenv-cli": "^8.0.0",
+    "typescript": "^5.6.2"
+  }
+}
