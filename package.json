@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "prepare": "apibara prepare",
-    "dev:mainnet": "npx dotenv -e .mainnet.env apibara dev --preset mainnet",
-    "dev:sepolia": "npx dotenv -e .sepolia.env apibara dev --preset sepolia",
+    "transfers:mainnet": "npx dotenv -e ./env/.transfers.mainnet.env apibara dev --preset mainnet --indexers transfers",
+    "transfers:sepolia": "npx dotenv -e ./env/.transfers.sepolia.env apibara dev --preset sepolia --indexers transfers",
+    "tokenkit:mainnet": "npx dotenv -e ./env/.tokenkit.mainnet.env apibara dev --preset mainnet --indexers tokenkit",
+    "tokenkit:sepolia": "npx dotenv -e ./env/.tokenkit.sepolia.env apibara dev --preset sepolia --indexers tokenkit",
     "start": "apibara start",
     "build": "apibara build",
     "typecheck": "tsc --noEmit"
@@ -15,10 +17,12 @@
     "@apibara/indexer": "next",
     "@apibara/protocol": "next",
     "@apibara/starknet": "next",
+    "@types/ws": "^8.18.1",
     "apibara": "next",
     "ioredis": "^5.6.0",
     "starknet": "^6.24.1",
-    "superjson": "^2.2.2"
+    "superjson": "^2.2.2",
+    "ws": "^8.18.1"
   },
   "devDependencies": {
     "@types/node": "^20.5.2",

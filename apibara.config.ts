@@ -10,7 +10,10 @@ export default defineConfig({
     streamUrl: process.env.STREAM_URL,
     webhookUrl: process.env.WEBHOOK_ENDPOINT,
     persistToRedis: process.env.PERSIST_TO_REDIS,
+    websocketUrl: process.env.WEBSOCKET_ENDPOINT,
+    contractAddress: process.env.CONTRACT_ADDRESS,
   },
+  preset: "mainnet",
   presets: {
     mainnet: {
       runtimeConfig: {
@@ -20,7 +23,9 @@ export default defineConfig({
         streamUrl: process.env.STREAM_URL,
         webhookUrl: process.env.WEBHOOK_ENDPOINT,
         persistToRedis: process.env.PERSIST_TO_REDIS,
-      }
+        websocketUrl: process.env.WEBSOCKET_ENDPOINT,
+        contractAddress: process.env.CONTRACT_ADDRESS,
+        }
     },
     sepolia: {
       runtimeConfig: {
@@ -30,6 +35,8 @@ export default defineConfig({
         streamUrl: process.env.STREAM_URL,
         webhookUrl: process.env.WEBHOOK_ENDPOINT,
         persistToRedis: process.env.PERSIST_TO_REDIS,
+        websocketUrl: process.env.WEBSOCKET_ENDPOINT,
+        contractAddress: process.env.CONTRACT_ADDRESS,
       }
     },
   },
