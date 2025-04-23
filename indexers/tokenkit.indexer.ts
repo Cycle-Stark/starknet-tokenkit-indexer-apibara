@@ -10,7 +10,6 @@ import { StarknetStream } from "@apibara/starknet";
 import type { ApibaraRuntimeConfig } from "apibara/types";
 import { redisPlugin } from "../lib/redis";
 import { websocketPlugin } from "lib/websocket";
-import { CairoUint256 } from "starknet";
 
 const abi = [
     {
@@ -20,7 +19,7 @@ const abi = [
         members: [
             {
                 kind: "key",
-                name: "tokenId",
+                name: "id",
                 type: "core::integer::u256",
             },
         ],
@@ -32,7 +31,7 @@ const abi = [
         members: [
             {
                 kind: "key",
-                name: "tokenId",
+                name: "id",
                 type: "core::integer::u256",
             },
         ],
@@ -82,6 +81,7 @@ function removeLeadingZeros(hexString: string): string {
 }
 
 export default function (runtimeConfig: ApibaraRuntimeConfig) {
+
     const {
         startingBlock,
         streamUrl,
@@ -90,19 +90,19 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
         websocketUrl,
         persistToRedis,
         indexerId
-    } = runtimeConfig as TokenkitConfig;
-
+    } = runtimeConfig as unknown as TokenkitConfig;
+    console.log("Starting block: ", startingBlock);
     return defineIndexer(StarknetStream)({
         streamUrl,
         finality: "accepted",
-        startingBlock: BigInt(startingBlock),
+        startingBlock: BigInt(startingBlock ?? 0),
         filter: {
             events: [
                 {
                     address: contractAddress as `0x${string}`,
                     keys: [
-                        getSelector("TokenCreated"),
-                        getSelector("TokenUpgraded"),
+                        // getSelector("TokenCreated"),
+                        // getSelector("TokenUpgraded"),
                     ],
                     includeReceipt: true,
                     includeTransaction: false,
@@ -175,6 +175,8 @@ function transformTokenEvents(header: any, events: any, receipts?: any) {
         let eventType = "";
         let decoded;
 
+        console.log("Event: ", event)
+
         // Check if it's a TokenCreated event
         if (removeLeadingZeros(event.keys?.[0]) === removeLeadingZeros(tokenCreatedSelector)) {
             decoded = decodeEvent({
@@ -197,12 +199,12 @@ function transformTokenEvents(header: any, events: any, receipts?: any) {
         }
 
         if (decoded) {
-            const receipt = receipts?.find(
-                (rx: any) => rx.meta.transactionIndex === decoded.transactionIndex
-            );
+            // const receipt = receipts?.find(
+            //     (rx: any) => rx.meta.transactionIndex === decoded.transactionIndex
+            // );
 
             // Convert the tokenId from Uint256 to a number
-            const tokenId = BigInt(decoded.args.tokenId as string).toString();
+            const tokenId = BigInt(decoded.args.id as string).toString();
 
             tokens.push({
                 token_id: Number(tokenId),

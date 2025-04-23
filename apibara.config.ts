@@ -1,42 +1,55 @@
 import { defineConfig } from "apibara/config";
-import dotenv from "dotenv";
+import * as dotenv from "dotenv";
 
 dotenv.config();
 
 export default defineConfig({
+  // Default runtime configuration
   runtimeConfig: {
-    startingBlock: Number(process.env.STARTING_BLOCK),
-    indexerId: process.env.INDEXER_ID,
-    streamUrl: process.env.STREAM_URL,
-    webhookUrl: process.env.WEBHOOK_ENDPOINT,
     persistToRedis: process.env.PERSIST_TO_REDIS,
-    websocketUrl: process.env.WEBSOCKET_ENDPOINT,
-    contractAddress: process.env.CONTRACT_ADDRESS,
   },
-  preset: "mainnet",
+  // Default preset
+  preset: "mainnet-tokenkit",
+  // Define presets for different environments and indexers
   presets: {
-    mainnet: {
+    // Tokenkit presets
+    "mainnet-tokenkit": {
       runtimeConfig: {
-        sinkId: process.env.INDEXER_ID,
-        indexerId: process.env.INDEXER_ID,
-        startingBlock: Number(process.env.STARTING_BLOCK),
-        streamUrl: process.env.STREAM_URL,
-        webhookUrl: process.env.WEBHOOK_ENDPOINT,
+        indexerId: process.env.TOKENKIT_MAINNET_INDEXER_ID,
+        startingBlock: Number(process.env.TRANSFERS_SEPOLIA_STARTING_BLOCK),
+        streamUrl: process.env.MAINNET_STREAM_URL,
         persistToRedis: process.env.PERSIST_TO_REDIS,
-        websocketUrl: process.env.WEBSOCKET_ENDPOINT,
-        contractAddress: process.env.CONTRACT_ADDRESS,
-        }
+        websocketUrl: process.env.TOKENKIT_MAINNET_WEBSOCKET_ENDPOINT,
+        contractAddress: process.env.TOKENKIT_MAINNET_CONTRACT_ADDRESS,
+      }
     },
-    sepolia: {
+    "sepolia-tokenkit": {
       runtimeConfig: {
-        sinkId: process.env.INDEXER_ID,
-        indexerId: process.env.INDEXER_ID,
-        startingBlock: Number(process.env.STARTING_BLOCK),
-        streamUrl: process.env.STREAM_URL,
-        webhookUrl: process.env.WEBHOOK_ENDPOINT,
+        indexerId: process.env.TOKENKIT_SEPOLIA_INDEXER_ID,
+        startingBlock: Number(process.env.TOKENKIT_SEPOLIA_STARTING_BLOCK),
+        streamUrl: process.env.SEPOLIA_STREAM_URL,
         persistToRedis: process.env.PERSIST_TO_REDIS,
-        websocketUrl: process.env.WEBSOCKET_ENDPOINT,
-        contractAddress: process.env.CONTRACT_ADDRESS,
+        websocketUrl: process.env.TOKENKIT_SEPOLIA_WEBSOCKET_ENDPOINT,
+        contractAddress: process.env.TOKENKIT_SEPOLIA_CONTRACT_ADDRESS,
+      }
+    },
+    // Transfers presets
+    "mainnet-transfers": {
+      runtimeConfig: {
+        indexerId: process.env.TRANSFERS_MAINNET_INDEXER_ID,
+        startingBlock: Number(process.env.TRANSFERS_MAINNET_STARTING_BLOCK),
+        streamUrl: process.env.MAINNET_STREAM_URL,
+        persistToRedis: process.env.PERSIST_TO_REDIS,
+        websocketUrl: process.env.TRANSFERS_MAINNET_WEBSOCKET_ENDPOINT,
+      }
+    },
+    "sepolia-transfers": {
+      runtimeConfig: {
+        indexerId: process.env.TRANSFERS_SEPOLIA_INDEXER_ID,
+        startingBlock: Number(process.env.TRANSFERS_SEPOLIA_STARTING_BLOCK),
+        streamUrl: process.env.SEPOLIA_STREAM_URL,
+        persistToRedis: process.env.PERSIST_TO_REDIS,
+        websocketUrl: process.env.TRANSFERS_SEPOLIA_WEBSOCKET_ENDPOINT,
       }
     },
   },

@@ -136,6 +136,7 @@ export const redisPlugin: RedisPluginFunction = function(options: RedisPluginOpt
             } catch (error) {
                 console.error('Failed to get last processed block from Redis:', error);
                 // Don't throw here to allow starting from default block if Redis fails
+                return null;
             }
             
             return null;

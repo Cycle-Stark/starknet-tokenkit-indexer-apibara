@@ -73,8 +73,8 @@ interface TransfersConfig {
 
 export default function (runtimeConfig: ApibaraRuntimeConfig) {
 
-  const { startingBlock, streamUrl, webhookUrl, websocketUrl, persistToRedis, indexerId } = runtimeConfig as TransfersConfig;
-
+  const { startingBlock, streamUrl, webhookUrl, websocketUrl, persistToRedis, indexerId } = runtimeConfig as unknown as TransfersConfig;
+  console.log("Starting block: ", startingBlock);
   return defineIndexer(StarknetStream)({
     streamUrl,
     finality: "accepted",
