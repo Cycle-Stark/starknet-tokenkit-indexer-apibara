@@ -3,4 +3,5 @@ dist
 .apibara
 .env
 .DS_Store
-*.env
+.env
+.prod.env
