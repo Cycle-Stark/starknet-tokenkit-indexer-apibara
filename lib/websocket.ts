@@ -142,7 +142,7 @@ interface WebSocketPluginFunction {
  * @param {WebSocketPluginOptions<T>} options - Configuration options for the WebSocket plugin
  * @returns {Function} An Apibara indexer plugin that connects to a WebSocket endpoint
  */
-export const websocketPlugin: WebSocketPluginFunction = function<T = any>(options: WebSocketPluginOptions<T>) {
+export const websocketPlugin: WebSocketPluginFunction = function <T = any>(options: WebSocketPluginOptions<T>) {
     const {
         url,
         headers = {},
@@ -158,7 +158,7 @@ export const websocketPlugin: WebSocketPluginFunction = function<T = any>(option
     if (!websocketPlugin.wsClient) {
         websocketPlugin.wsClient = null;
     }
-    
+
     // Initialize last processed block
     if (websocketPlugin.lastProcessedBlock === undefined) {
         websocketPlugin.lastProcessedBlock = null;
@@ -178,7 +178,7 @@ export const websocketPlugin: WebSocketPluginFunction = function<T = any>(option
             if (websocketPlugin.wsClient && websocketPlugin.wsClient.readyState === WebSocket.OPEN) {
                 return true;
             }
-            
+
             // Close existing connection if it exists
             if (websocketPlugin.wsClient) {
                 if (websocketPlugin.wsClient.readyState !== WebSocket.CLOSED) {
@@ -186,26 +186,26 @@ export const websocketPlugin: WebSocketPluginFunction = function<T = any>(option
                 }
                 websocketPlugin.wsClient = null;
             }
-            
+
             // Create a new WebSocket connection
             return new Promise((resolve) => {
                 try {
                     // console.log('Attempting to reconnect to WebSocket...');
-                    
+
                     // Create new WebSocket connection
                     websocketPlugin.wsClient = new WebSocket(url, { headers });
-                    
+
                     // Set up event handlers
                     websocketPlugin.wsClient.onopen = () => {
                         console.log(`Reconnected to WebSocket at ${url}`);
                         resolve(true);
                     };
-                    
+
                     websocketPlugin.wsClient.onerror = (error) => {
                         // console.error('WebSocket reconnection error:', error);
                         resolve(false);
                     };
-                    
+
                     // Set a timeout for the connection attempt
                     setTimeout(() => {
                         if (websocketPlugin.wsClient && websocketPlugin.wsClient.readyState !== WebSocket.OPEN) {
@@ -238,7 +238,7 @@ export const websocketPlugin: WebSocketPluginFunction = function<T = any>(option
                     if (!websocketPlugin.wsClient || websocketPlugin.wsClient.readyState !== WebSocket.OPEN) {
                         lastError = new Error('WebSocket not connected');
                         attempts++;
-                        
+
                         if (attempts < maxAttempts) {
                             // console.log(`WebSocket not connected. Waiting ${delayMs}ms before retry attempt ${attempts}/${maxAttempts}...`);
                             await new Promise(resolve => setTimeout(resolve, delayMs));
@@ -248,28 +248,33 @@ export const websocketPlugin: WebSocketPluginFunction = function<T = any>(option
                             break;
                         }
                     }
-                    
+
                     // Serialize data to JSON
                     const message = JSON.stringify(data);
-                    
+
                     // Send data to WebSocket
                     websocketPlugin.wsClient!.send(message);
-                    
+
                     return { success: true };
                 } catch (error: any) {
                     lastError = error;
                     attempts++;
-                    
+
                     if (attempts < maxAttempts) {
                         // console.log(`Send failed, retry attempt ${attempts}/${maxAttempts} - Waiting ${delayMs}ms before next attempt...`);
                         await new Promise(resolve => setTimeout(resolve, delayMs));
+                    } else {
+                        // If all attempts failed, log the error
+                        console.error(`Failed to send data to WebSocket after ${maxAttempts} attempts:`, lastError);
+                        // Exit the program
+                        process.exit(1);
                     }
                 }
             }
 
-            return { 
-                success: false, 
-                error: lastError ? lastError.message : 'Failed to send data to WebSocket after multiple attempts' 
+            return {
+                success: false,
+                error: lastError ? lastError.message : 'Failed to send data to WebSocket after multiple attempts'
             };
         }
 
@@ -279,18 +284,18 @@ export const websocketPlugin: WebSocketPluginFunction = function<T = any>(option
          */
         indexer.hooks.hook("run:before", () => {
             const ctx = useIndexerContext();
-            
+
             try {
                 // Initialize WebSocket connection
                 websocketPlugin.wsClient = new WebSocket(url, {
                     headers
                 });
-                
+
                 // Set up WebSocket event handlers
                 websocketPlugin.wsClient.on('open', () => {
                     console.log(`Connected to WebSocket at ${url}`);
                 });
-                
+
                 websocketPlugin.wsClient.on('message', (data: WebSocket.Data) => {
                     try {
                         // Parse message from WebSocket if needed
@@ -300,21 +305,21 @@ export const websocketPlugin: WebSocketPluginFunction = function<T = any>(option
                         // console.error('Failed to parse WebSocket message:', error);
                     }
                 });
-                
+
                 websocketPlugin.wsClient.on('error', (error: Error) => {
                     console.error('WebSocket error:', error.message);
                 });
-                
+
                 websocketPlugin.wsClient.on('close', (code: number, reason: string) => {
                     console.log(`WebSocket connection closed: ${code} - ${reason}`);
-                    
+
                     // Attempt to reconnect after a delay
                     setTimeout(async () => {
                         // console.log('Attempting to reconnect after connection closed...');
                         await reconnectWebSocket();
                     }, 2000);
                 });
-                
+
                 // Store the WebSocket plugin in the context
                 ctx.websocketPlugin = {
                     url,
@@ -324,7 +329,7 @@ export const websocketPlugin: WebSocketPluginFunction = function<T = any>(option
                         return sendToWebSocket(data);
                     }
                 };
-                
+
                 console.log('WebSocket plugin initialized');
             } catch (error) {
                 console.error('Failed to initialize WebSocket plugin:', error);
@@ -351,10 +356,10 @@ export const websocketPlugin: WebSocketPluginFunction = function<T = any>(option
                     // Get the block number for logging
                     const data: any = message.data.data[0];
                     const blockNumber = BigInt(data?.header?.blockNumber).toString();
-                    
+
                     // console.log(`Sending block ${blockNumber} to WebSocket...`);
                     const result = await sendToWebSocket(transformedData);
-                    
+
                     if (!result.success) {
                         console.error(`WebSocket could not process block: ${blockNumber}, Error: ${result.error}`);
                         throw new Error(`WebSocket could not process block: ${blockNumber}, Error: ${result.error}`);
