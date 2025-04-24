@@ -67,13 +67,14 @@ interface TransfersConfig {
   streamUrl: string;
   webhookUrl?: string;
   websocketUrl?: string;
+  websocketDelayMs?: number;
   persistToRedis?: string;
   indexerId?: string;
 }
 
 export default function (runtimeConfig: ApibaraRuntimeConfig) {
 
-  const { startingBlock, streamUrl, webhookUrl, websocketUrl, persistToRedis, indexerId } = runtimeConfig as unknown as TransfersConfig;
+  const { startingBlock, streamUrl, webhookUrl, websocketUrl, websocketDelayMs, persistToRedis, indexerId } = runtimeConfig as unknown as TransfersConfig;
   console.log("Starting block: ", startingBlock);
   return defineIndexer(StarknetStream)({
     streamUrl,
@@ -157,8 +158,10 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
         url: websocketUrl!!,
         // Send data for both regular messages and finalized blocks
         sendOnEveryMessage: true,
+        // Add delay before sending data to the WebSocket (if configured)
+        sendDelayMs: websocketDelayMs,
         // Transform the data to a more convenient format for the WebSocket
-        transformData: ({block: {header, events, receipts}}) => {
+        transformData: ({ block: { header, events, receipts } }) => {
 
           // Extract transfers from the block data
           const transfers: Transfer[] = [];

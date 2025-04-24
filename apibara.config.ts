@@ -20,6 +20,7 @@ export default defineConfig({
         streamUrl: process.env.MAINNET_STREAM_URL,
         persistToRedis: process.env.PERSIST_TO_REDIS,
         websocketUrl: process.env.TOKENKIT_MAINNET_WEBSOCKET_ENDPOINT,
+        websocketDelayMs: Number(process.env.WEBSOCKET_DELAY_MS),
         contractAddress: process.env.TOKENKIT_MAINNET_CONTRACT_ADDRESS,
       }
     },
@@ -30,6 +31,7 @@ export default defineConfig({
         streamUrl: process.env.SEPOLIA_STREAM_URL,
         persistToRedis: process.env.PERSIST_TO_REDIS,
         websocketUrl: process.env.TOKENKIT_SEPOLIA_WEBSOCKET_ENDPOINT,
+        websocketDelayMs: Number(process.env.WEBSOCKET_DELAY_MS),
         contractAddress: process.env.TOKENKIT_SEPOLIA_CONTRACT_ADDRESS,
       }
     },
@@ -41,6 +43,7 @@ export default defineConfig({
         streamUrl: process.env.MAINNET_STREAM_URL,
         persistToRedis: process.env.PERSIST_TO_REDIS,
         websocketUrl: process.env.TRANSFERS_MAINNET_WEBSOCKET_ENDPOINT,
+        websocketDelayMs: Number(process.env.WEBSOCKET_DELAY_MS),
       }
     },
     "sepolia-transfers": {
@@ -50,6 +53,7 @@ export default defineConfig({
         streamUrl: process.env.SEPOLIA_STREAM_URL,
         persistToRedis: process.env.PERSIST_TO_REDIS,
         websocketUrl: process.env.TRANSFERS_SEPOLIA_WEBSOCKET_ENDPOINT,
+        websocketDelayMs: Number(process.env.WEBSOCKET_DELAY_MS),
       }
     },
   },

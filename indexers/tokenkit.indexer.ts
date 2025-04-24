@@ -66,6 +66,7 @@ interface TokenkitConfig {
     contractAddress: string;
     webhookUrl?: string;
     websocketUrl?: string;
+    websocketDelayMs?: number;
     persistToRedis?: string;
     indexerId?: string;
 }
@@ -88,6 +89,7 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
         contractAddress,
         webhookUrl,
         websocketUrl,
+        websocketDelayMs,
         persistToRedis,
         indexerId
     } = runtimeConfig as unknown as TokenkitConfig;
@@ -139,6 +141,8 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
                 url: websocketUrl,
                 // Send data for both regular messages and finalized blocks
                 sendOnEveryMessage: true,
+                // Add delay before sending data to the WebSocket (if configured)
+                sendDelayMs: websocketDelayMs,
                 // Transform the data to a more convenient format for the WebSocket
                 transformData: ({ block: { header, events, receipts } }) => {
                     return transformTokenEvents(header, events, receipts);

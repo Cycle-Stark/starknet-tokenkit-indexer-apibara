@@ -39,6 +39,13 @@ export interface WebSocketPluginOptions<T = any> {
     sendOnEveryMessage?: boolean;
 
     /**
+     * Delay in milliseconds before sending data to the WebSocket
+     * This allows controlling the rate at which data is sent to the backend
+     * @default 0 - no delay
+     */
+    sendDelayMs?: number;
+
+    /**
      * Optional retry configuration
      */
     retry?: {
@@ -148,6 +155,7 @@ export const websocketPlugin: WebSocketPluginFunction = function <T = any>(optio
         headers = {},
         transformData = (data) => data,
         sendOnEveryMessage = false,
+        sendDelayMs = 0,
         retry = { maxAttempts: 3, delayMs: 1000 },
     } = options;
 
@@ -251,6 +259,11 @@ export const websocketPlugin: WebSocketPluginFunction = function <T = any>(optio
 
                     // Serialize data to JSON
                     const message = JSON.stringify(data);
+
+                    // Apply delay before sending if configured
+                    if (sendDelayMs > 0) {
+                        await new Promise(resolve => setTimeout(resolve, sendDelayMs));
+                    }
 
                     // Send data to WebSocket
                     websocketPlugin.wsClient!.send(message);
