@@ -1,4 +1,4 @@
-# TokenKit Indexer
+# Tokenkit Indexer
 
 ## Environment Setup
 

@@ -10,6 +10,7 @@ import { StarknetStream } from "@apibara/starknet";
 import type { ApibaraRuntimeConfig } from "apibara/types";
 import { redisPlugin } from "../lib/redis";
 import { websocketPlugin } from "lib/websocket";
+import { kafkaPlugin } from "../lib/kafka_producer";
 
 const abi = [
     {
@@ -69,6 +70,10 @@ interface TokenkitConfig {
     websocketDelayMs?: number;
     persistToRedis?: string;
     indexerId?: string;
+    kafkaBrokers?: string[];
+    kafkaTopic?: string;
+    kafkaClientId?: string;
+    kafkaTenantSchema?: string;
 }
 
 
@@ -91,7 +96,11 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
         websocketUrl,
         websocketDelayMs,
         persistToRedis,
-        indexerId
+        indexerId,
+        kafkaBrokers,
+        kafkaTopic,
+        kafkaClientId,
+        kafkaTenantSchema,
     } = runtimeConfig as unknown as TokenkitConfig;
     console.log("Starting block: ", startingBlock);
     return defineIndexer(StarknetStream)({
@@ -136,23 +145,51 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
             //     },
             //   }),
 
-            // Add websocket plugin if URL is provided
-            websocketUrl && websocketPlugin({
-                url: websocketUrl,
-                // Send data for both regular messages and finalized blocks
-                sendOnEveryMessage: true,
-                // Add delay before sending data to the WebSocket (if configured)
-                sendDelayMs: websocketDelayMs,
-                // Transform the data to a more convenient format for the WebSocket
-                transformData: ({ block: { header, events, receipts } }) => {
-                    return transformTokenEvents(header, events, receipts);
-                },
-            }),
+            // Use Kafka if brokers are configured
+            ...(kafkaBrokers && kafkaTopic ? [
+                kafkaPlugin({
+                    brokers: kafkaBrokers,
+                    topic: kafkaTopic,
+                    clientId: kafkaClientId || `tokenkit-indexer-${indexerId || 'default'}`,
+                    // Send data for both regular messages and finalized blocks
+                    sendOnEveryMessage: true,
+                    // Transform the data to a more convenient format for Kafka
+                    transformData: ({ block: { header, events, receipts } }) => {
+                        const data = transformTokenEvents(header, events, receipts);
+                        // Use the explicit tenant schema from config, falling back to fixed values
+                        // This ensures we're always using the correct schema regardless of indexerId
+                        const tenant_schema = kafkaTenantSchema || 'mainnet';
+                        return {
+                            tenant_schema,
+                            ...data
+                        };
+                    },
+                    // Add retry logic
+                    retry: {
+                        maxAttempts: 5,
+                        delayMs: 2000,
+                    },
+                })
+            ] : []),
+            
+            // Fallback to WebSocket if Kafka is not configured and WebSocket URL is provided
+            ...(websocketUrl && (!kafkaBrokers || !kafkaTopic) ? [
+                websocketPlugin({
+                    url: websocketUrl,
+                    // Send data for both regular messages and finalized blocks
+                    sendOnEveryMessage: true,
+                    // Add delay before sending data to the WebSocket (if configured)
+                    sendDelayMs: websocketDelayMs,
+                    // Transform the data to a more convenient format for the WebSocket
+                    transformData: ({ block: { header, events, receipts } }) => {
+                        return transformTokenEvents(header, events, receipts);
+                    },
+                })
+            ] : []),
 
         ].filter(Boolean),
 
-        transform({ block: { receipts, events, header } }) {
-
+        async transform({ block: { receipts, events, header } }) {
             const logger = useLogger();
             logger.info(`Processing block ${header.blockNumber}`);
             // Just log the data and return void to match the expected return type
