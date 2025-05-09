@@ -4,6 +4,8 @@ import { Cursor, DataFinality } from "@apibara/protocol";
 import { Block } from "@apibara/starknet";
 import { Kafka, Producer, ProducerRecord } from 'kafkajs';
 
+
+
 /**
  * Configuration options for the Kafka plugin.
  * @interface KafkaPluginOptions
@@ -59,6 +61,13 @@ export interface KafkaPluginOptions<T = any> {
          */
         delayMs?: number;
     };
+    
+    /**
+     * Maximum number of transfers to include in a single Kafka message
+     * Messages with more transfers than this will be split into multiple chunks
+     * @default 200
+     */
+    chunkSize?: number;
 }
 
 /**
@@ -150,6 +159,7 @@ export const kafkaPlugin: KafkaPluginFunction = function <T = any>(options: Kafk
         transformData = (data) => data,
         sendOnEveryMessage = false,
         retry = { maxAttempts: 3, delayMs: 1000 },
+        chunkSize = 200,
     } = options;
 
     const maxAttempts = retry.maxAttempts ?? 3;
@@ -234,6 +244,89 @@ export const kafkaPlugin: KafkaPluginFunction = function <T = any>(options: Kafk
                 blockNumber = String(data.blockNumber);
             }
 
+            // Check if we need to chunk the data (if it contains transfers array)
+            if (data && typeof data === 'object' && 'transfers' in data && Array.isArray(data.transfers) && data.transfers.length > chunkSize) {
+                console.log(`Chunking ${data.transfers.length} transfers into chunks of ${chunkSize}`);
+                
+                // Create chunks of transfers
+                const transferChunks = [];
+                for (let i = 0; i < data.transfers.length; i += chunkSize) {
+                    transferChunks.push(data.transfers.slice(i, i + chunkSize));
+                }
+                
+                // Send each chunk as a separate message
+                let allSuccessful = true;
+                let lastError = '';
+                
+                for (let i = 0; i < transferChunks.length; i++) {
+                    // Create a new data object with the chunk of transfers
+                    const chunkData = {
+                        ...data,
+                        transfers: transferChunks[i],
+                        chunkInfo: {
+                            chunkIndex: i,
+                            totalChunks: transferChunks.length,
+                            originalCount: data.transfers.length
+                        }
+                    };
+                    
+                    // Prepare the message for this chunk
+                    const message: ProducerRecord = {
+                        topic,
+                        messages: [
+                            {
+                                key: blockNumber ? blockNumber : undefined,
+                                value: JSON.stringify(chunkData),
+                                headers: {
+                                    'content-type': 'application/json',
+                                    'source': 'apibara-indexer',
+                                    'chunk-index': String(i),
+                                    'total-chunks': String(transferChunks.length)
+                                }
+                            }
+                        ]
+                    };
+                    
+                    // Try to send the chunk with retries
+                    let chunkSuccess = false;
+                    
+                    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                        try {
+                            await producer.send(message);
+                            console.log(`Successfully sent chunk ${i+1}/${transferChunks.length} to Kafka topic ${topic}`);
+                            chunkSuccess = true;
+                            break;
+                        } catch (error) {
+                            console.error(`Attempt ${attempt}/${maxAttempts} failed to send chunk ${i+1}/${transferChunks.length} to Kafka: ${error}`);
+                            
+                            // If this is the last attempt, record the error
+                            if (attempt === maxAttempts) {
+                                allSuccessful = false;
+                                lastError = String(error);
+                            } else {
+                                // Wait before retrying
+                                await new Promise(resolve => setTimeout(resolve, delayMs));
+                            }
+                        }
+                    }
+                    
+                    // If we couldn't send this chunk after all retries, consider stopping
+                    if (!chunkSuccess) {
+                        console.error(`Failed to send chunk ${i+1}/${transferChunks.length} after ${maxAttempts} attempts`);
+                    }
+                }
+                
+                // Update last processed block if available
+                if (blockNumber) {
+                    kafkaPlugin.lastProcessedBlock = parseInt(blockNumber, 10);
+                }
+                
+                return allSuccessful 
+                    ? { success: true } 
+                    : { success: false, error: `Failed to send some chunks: ${lastError}` };
+            }
+            
+            // For data without transfers or small number of transfers, send as a single message
             // Prepare the message
             const message: ProducerRecord = {
                 topic,

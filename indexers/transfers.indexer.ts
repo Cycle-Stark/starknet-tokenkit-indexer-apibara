@@ -230,6 +230,7 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
             maxAttempts: 5,
             delayMs: 2000,
           },
+          chunkSize: 500,
         })
       ] : []),
       
