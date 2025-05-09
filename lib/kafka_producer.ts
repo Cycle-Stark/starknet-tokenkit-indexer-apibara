@@ -270,18 +270,22 @@ export const kafkaPlugin: KafkaPluginFunction = function <T = any>(options: Kafk
                         }
                     };
                     
+                    // Create a unique key for each chunk by combining block number and chunk index
+                    const chunkKey = blockNumber ? `${blockNumber}-chunk-${i}` : undefined;
+                    
                     // Prepare the message for this chunk
                     const message: ProducerRecord = {
                         topic,
                         messages: [
                             {
-                                key: blockNumber ? blockNumber : undefined,
+                                key: chunkKey,
                                 value: JSON.stringify(chunkData),
                                 headers: {
                                     'content-type': 'application/json',
                                     'source': 'apibara-indexer',
                                     'chunk-index': String(i),
-                                    'total-chunks': String(transferChunks.length)
+                                    'total-chunks': String(transferChunks.length),
+                                    'original-block': blockNumber || ''
                                 }
                             }
                         ]
