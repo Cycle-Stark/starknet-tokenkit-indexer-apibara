@@ -50,6 +50,7 @@ jobs:
             
             echo "Installing/updating dependencies..."
             pnpm install
+            pnpm update
             
             echo "Building application..."
             pnpm run build
