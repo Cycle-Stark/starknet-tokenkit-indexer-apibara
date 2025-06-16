@@ -10,6 +10,7 @@ export default defineConfig({
   },
   // Default preset
   preset: "mainnet-tokenkit",
+  
   // Define presets for different environments and indexers
   presets: {
     // Tokenkit presets
