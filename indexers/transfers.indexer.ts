@@ -92,7 +92,7 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
     kafkaClientId,
     kafkaTenantSchema,
   } = runtimeConfig as unknown as TransfersConfig;
-  console.log("Starting block: ", startingBlock);
+
   return defineIndexer(StarknetStream)({
     streamUrl,
     finality: "accepted",
@@ -108,6 +108,7 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
         },
       ],
     },
+    
     plugins: [
       // Redis persistence plugin if enabled
       // @ts-ignore - Type compatibility issues with generic plugins
