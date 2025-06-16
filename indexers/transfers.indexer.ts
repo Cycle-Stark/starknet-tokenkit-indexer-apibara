@@ -346,12 +346,12 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
 //     }
 //   }
 
-  return {
-    blockNumber,
-    timestamp,
-    transfers,
-  };
-}
+//   return {
+//     blockNumber,
+//     timestamp,
+//     transfers,
+//   };
+// }
 
 
 function getActualFee(receipt: TransactionReceipt): string {
