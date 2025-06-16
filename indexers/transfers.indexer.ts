@@ -97,6 +97,12 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
     streamUrl,
     finality: "accepted",
     startingBlock: BigInt(startingBlock),
+    clientOptions: {
+      channelOptions: {
+        "grpc.max_send_message_length": 100_000_000,
+        "grpc.max_receive_message_length": 100_000_000
+      }
+    },
     filter: {
       // FILL ME: contract address
       events: [

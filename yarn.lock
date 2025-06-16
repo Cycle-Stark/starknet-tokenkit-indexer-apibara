@@ -15,12 +15,26 @@
     "@jridgewell/gen-mapping" "^0.3.5"
     "@jridgewell/trace-mapping" "^0.3.24"
 
-"@apibara/indexer@2.1.0-beta.23", "@apibara/indexer@next":
+"@apibara/indexer@2.1.0-beta.23":
   version "2.1.0-beta.23"
   resolved "https://registry.yarnpkg.com/@apibara/indexer/-/indexer-2.1.0-beta.23.tgz#73764232dcf0b638cfcc53df635707dc2db4c3cd"
   integrity sha512-a5km2ZuWP1RtvJfo090Plivez9w26VRrA4I+2hc4qvRlAvnQ465cRMZLtw6QIaVNgMsAYWuiSdMkZHscz1t2hA==
   dependencies:
     "@apibara/protocol" "2.1.0-beta.23"
+    "@opentelemetry/api" "^1.9.0"
+    ci-info "^4.1.0"
+    consola "^3.4.2"
+    hookable "^5.5.3"
+    klona "^2.0.6"
+    nice-grpc "^2.1.8"
+    unctx "^2.3.1"
+
+"@apibara/indexer@next":
+  version "2.1.0-beta.38"
+  resolved "https://registry.yarnpkg.com/@apibara/indexer/-/indexer-2.1.0-beta.38.tgz#616d12f0a846ee6838add327f53a42a160e21315"
+  integrity sha512-lq4EXzmTl4k9Z9VcOh1G7bj9gzX2oNfqk6dba3RRsi4KldewPUZvI20HBUafa91x/o3b1he3vHLSX3wN9oNDXA==
+  dependencies:
+    "@apibara/protocol" "2.1.0-beta.38"
     "@opentelemetry/api" "^1.9.0"
     ci-info "^4.1.0"
     consola "^3.4.2"
@@ -36,6 +50,18 @@
   dependencies:
     "@effect/schema" "^0.67.15"
     effect "^3.2.6"
+    long "^5.2.3"
+    nice-grpc "^2.1.8"
+    nice-grpc-common "^2.0.2"
+    protobufjs "^7.3.0"
+    viem "^2.13.2"
+
+"@apibara/protocol@2.1.0-beta.38":
+  version "2.1.0-beta.38"
+  resolved "https://registry.yarnpkg.com/@apibara/protocol/-/protocol-2.1.0-beta.38.tgz#900274064b1bd07402bb25cdaed1d13981932c91"
+  integrity sha512-fTcaxi6n1UYjAsPm2aVxS5nqMR43jn2qN+xfe1mBoH9Jjk35PDOlwT+7DKth/GSpa9Ime6/DLpayPAeARbkDDA==
+  dependencies:
+    consola "^3.4.2"
     long "^5.2.3"
     nice-grpc "^2.1.8"
     nice-grpc-common "^2.0.2"

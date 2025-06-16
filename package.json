@@ -9,12 +9,10 @@
     "transfers:sepolia": "apibara dev --preset sepolia-transfers --indexers transfers",
     "tokenkit:mainnet": "apibara dev --preset mainnet-tokenkit --indexers tokenkit",
     "tokenkit:sepolia": "apibara dev --preset sepolia-tokenkit --indexers tokenkit",
-
     "start:transfers:mainnet": "apibara start --preset mainnet-transfers --indexer transfers",
     "start:transfers:sepolia": "apibara start --preset sepolia-transfers --indexer transfers",
     "start:tokenkit:mainnet": "apibara start --preset mainnet-tokenkit --indexer tokenkit",
     "start:tokenkit:sepolia": "apibara start --preset sepolia-tokenkit --indexer tokenkit",
-
     "start": "apibara start",
     "build": "apibara build",
     "typecheck": "tsc --noEmit"
