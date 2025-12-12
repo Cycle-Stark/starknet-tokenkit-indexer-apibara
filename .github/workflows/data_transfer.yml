@@ -40,7 +40,7 @@ jobs:
           source: "."
           target: "/home/indexer/"
 
-      - name: Redeploy Frontend
+      - name: Redeploy Indexer
         env:
           VPS_PASSWORD: ${{ secrets.CONTABO_PASSWORD }}
         run: |
@@ -48,14 +48,37 @@ jobs:
             
             cd /home/indexer
             
+            # Load NVM and Node.js
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
+            # Verify Node.js is available
+            if ! command -v node &> /dev/null; then
+                echo "Error: Node.js not found. Please install Node.js first."
+                exit 1
+            fi
+            
+            echo "Node version: $(node --version)"
+            echo "Yarn version: $(yarn --version)"
+            
             echo "Installing/updating dependencies..."
             yarn install
             
             echo "Building application..."
             yarn build
 
-            echo "Starting using pm2"
+            echo "Stopping existing PM2 processes..."
+            pm2 stop ecosystem.config.cjs || true
+            pm2 delete ecosystem.config.cjs || true
+            
+            echo "Starting indexers with PM2..."
             pm2 start ecosystem.config.cjs
+            
+            echo "Saving PM2 process list..."
+            pm2 save
+            
+            echo "PM2 status:"
+            pm2 status
             
             echo "Redeploy completed successfully!"
           EOF
