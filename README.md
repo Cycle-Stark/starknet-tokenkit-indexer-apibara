@@ -22,7 +22,9 @@ The Apibara configuration has been updated to use a preset-based approach:
 
 ## Available Scripts
 
-The following npm scripts are available:
+### Development
+
+The following yarn scripts are available for development:
 
 ```bash
 # Run the tokenkit indexer on mainnet
@@ -36,6 +38,55 @@ yarn transfers:mainnet
 
 # Run the transfers indexer on sepolia
 yarn transfers:sepolia
+```
+
+### Production (PM2)
+
+For production deployment, use PM2 with the ecosystem config:
+
+```bash
+# Install dependencies
+yarn install
+
+# Build the project
+yarn build
+
+# Start all indexers (mainnet + sepolia)
+pm2 start ecosystem.config.cjs
+
+# Start only mainnet indexer
+pm2 start ecosystem.config.cjs --only transfers_mainnet
+
+# Start only sepolia indexer
+pm2 start ecosystem.config.cjs --only transfers_sepolia
+
+# Stop a specific indexer
+pm2 stop ecosystem.config.cjs --only transfers_mainnet
+
+# Restart a specific indexer
+pm2 restart ecosystem.config.cjs --only transfers_sepolia
+
+# Stop all indexers
+pm2 stop ecosystem.config.cjs
+
+# Delete all indexers from PM2
+pm2 delete ecosystem.config.cjs
+
+# View status
+pm2 status
+
+# View logs for specific indexer
+pm2 logs transfers_mainnet
+pm2 logs transfers_sepolia
+
+# View all logs
+pm2 logs
+
+# Save PM2 process list (survives reboots)
+pm2 save
+
+# Setup PM2 to start on boot
+pm2 startup
 ```
 
 ## Adding New Networks or Indexers
