@@ -1,4 +1,4 @@
-name: Deploy Tokenkit Indexer
+name: Tokenkit Indexer
 
 on:
   workflow_dispatch:
@@ -49,11 +49,13 @@ jobs:
             cd /home/indexer
             
             echo "Installing/updating dependencies..."
-            pnpm install
-            pnpm update
+            yarn install
             
             echo "Building application..."
-            pnpm run build
+            yarn build
+
+            echo "Starting using pm2"
+            pm2 start ecosystem.config.cjs
             
             echo "Redeploy completed successfully!"
           EOF

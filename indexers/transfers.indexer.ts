@@ -51,6 +51,7 @@ export interface Transfer {
   block: string;
   status: string;
   fee: string;
+  feeUnit: string;
 }
 
 /**
@@ -123,80 +124,19 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
         indexerId: indexerId,
       }),
 
-      // Add webhook plugin to send transfer events to a webhook endpoint
-      // webhookPlugin<WebhookTransformedData>({
-      //   url: webhookUrl!!,
-      //   // Send data for both regular messages and finalized blocks for debugging
-      //   sendOnEveryMessage: true,
-      //   // Transform the data to a more convenient format for the webhook
-      //   transformData: ({block: {header, events, receipts}}) => {
-
-      //     // Extract transfers from the block data
-      //     const transfers: Transfer[] = [];
-      //     const blockNumber = BigInt(header.blockNumber).toString()
-      //     const timestamp = header.timestamp.toISOString()
-
-      //     for (const event of events || []) {
-      //       const decoded = decodeEvent({
-      //         abi,
-      //         event,
-      //         eventName: "Transfer",
-      //         strict: false,
-      //       });
-
-      //       if (decoded) {
-      //         const receipt = receipts?.find(
-      //           (rx: any) => rx.meta.transactionIndex === decoded.transactionIndex
-      //         );
-
-      //         transfers.push({
-      //           token: decoded.address,
-      //           from: decoded.args.from as string,
-      //           to: decoded.args.to as string,
-      //           value: BigInt(decoded.args.value as string)?.toString(),
-      //           txhash: decoded.transactionHash,
-      //           timestamp: timestamp,
-      //           block: blockNumber,
-      //           status: decoded.transactionStatus,
-      //           fee: receipt ? getActualFee(receipt) : "0",
-      //         });
-      //       }
-      //     }
-
-      //     // Return typed data structure
-      //     return {
-      //       blockNumber: blockNumber,
-      //       timestamp: timestamp,
-      //       transfers,
-      //     };
-
-      //   },
-      //   // Add retry logic
-      //   retry: {
-      //     maxAttempts: 5,
-      //     delayMs: 2000,
-      //   },
-      // }),
-
-      // Use Kafka if brokers are configured
-      ...(kafkaBrokers && kafkaTopic ? [
-        kafkaPlugin({
-          brokers: kafkaBrokers,
-          topic: kafkaTopic,
-          clientId: kafkaClientId || `transfers-indexer-${indexerId || 'default'}`,
+      // Webhook plugin - PRIMARY data delivery method (replacing Kafka)
+      ...(webhookUrl ? [
+        webhookPlugin<WebhookTransformedData>({
+          url: webhookUrl,
           // Send data for both regular messages and finalized blocks
           sendOnEveryMessage: true,
-          // Transform the data to a more convenient format for Kafka
+          // Transform the data to a more convenient format for the webhook
           transformData: ({ block: { header, events, receipts } }) => {
 
             // Extract transfers from the block data
             const transfers: Transfer[] = [];
             const blockNumber = BigInt(header.blockNumber).toString()
             const timestamp = header.timestamp.toISOString()
-
-            // Use the explicit tenant schema from config, falling back to fixed values
-            // This ensures we're always using the correct schema regardless of indexerId
-            const tenant_schema = kafkaTenantSchema || 'mainnet';
 
             for (const event of events || []) {
               const decoded = decodeEvent({
@@ -210,53 +150,51 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
                 const receipt = receipts?.find(
                   (rx: any) => rx.meta.transactionIndex === decoded.transactionIndex
                 );
-
+                const args: any = decoded.args;
                 transfers.push({
                   token: decoded.address,
-                  from: decoded.args.from as string,
-                  to: decoded.args.to as string,
-                  value: BigInt(decoded.args.value as string)?.toString(),
+                  from: args.from as string,
+                  to: args.to as string,
+                  value: BigInt(args.value as string)?.toString(),
                   txhash: decoded.transactionHash,
                   timestamp: timestamp,
                   block: blockNumber,
                   status: decoded.transactionStatus,
                   fee: receipt ? getActualFee(receipt) : "0",
+                  feeUnit: receipt?.meta.actualFee.unit ?? "fri"
                 });
               }
             }
 
+            // Return typed data structure
             return {
-              tenant_schema,
-              blockNumber,
-              timestamp,
+              blockNumber: blockNumber,
+              timestamp: timestamp,
               transfers,
             };
+
           },
           // Add retry logic
           retry: {
             maxAttempts: 5,
             delayMs: 2000,
           },
-          chunkSize: 500,
         })
       ] : []),
 
-      // Fallback to WebSocket if Kafka is not configured
-      // ...(websocketUrl ? [
-      //   websocketPlugin({
-      //     url: websocketUrl,
-      //     // Send data for both regular messages and finalized blocks
+      // Kafka plugin - DISABLED (replaced by webhook)
+      // Uncomment if you need Kafka for high-throughput scenarios
+      // ...(kafkaBrokers && kafkaTopic ? [
+      //   kafkaPlugin({
+      //     brokers: kafkaBrokers,
+      //     topic: kafkaTopic,
+      //     clientId: kafkaClientId || `transfers-indexer-${indexerId || 'default'}`,
       //     sendOnEveryMessage: true,
-      //     // Add delay before sending data to the WebSocket (if configured)
-      //     sendDelayMs: websocketDelayMs,
-      //     // Transform the data to a more convenient format for the WebSocket
       //     transformData: ({ block: { header, events, receipts } }) => {
-
-      //       // Extract transfers from the block data
       //       const transfers: Transfer[] = [];
       //       const blockNumber = BigInt(header.blockNumber).toString()
       //       const timestamp = header.timestamp.toISOString()
-
+      //       const tenant_schema = kafkaTenantSchema || 'mainnet';
       //       for (const event of events || []) {
       //         const decoded = decodeEvent({
       //           abi,
@@ -264,17 +202,16 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
       //           eventName: "Transfer",
       //           strict: false,
       //         });
-
       //         if (decoded) {
       //           const receipt = receipts?.find(
       //             (rx: any) => rx.meta.transactionIndex === decoded.transactionIndex
       //           );
-
+      //           const args: any = decoded.args;
       //           transfers.push({
       //             token: decoded.address,
-      //             from: decoded.args.from as string,
-      //             to: decoded.args.to as string,
-      //             value: BigInt(decoded.args.value as string)?.toString(),
+      //             from: args.from as string,
+      //             to: args.to as string,
+      //             value: BigInt(args.value as string)?.toString(),
       //             txhash: decoded.transactionHash,
       //             timestamp: timestamp,
       //             block: blockNumber,
@@ -283,14 +220,19 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
       //           });
       //         }
       //       }
-
       //       return {
+      //         tenant_schema,
       //         blockNumber,
       //         timestamp,
       //         transfers,
       //       };
       //     },
-      //   }),
+      //     retry: {
+      //       maxAttempts: 5,
+      //       delayMs: 2000,
+      //     },
+      //     chunkSize: 500,
+      //   })
       // ] : []),
     ],
 

@@ -9,6 +9,7 @@ import { useLogger } from "@apibara/indexer/plugins";
 import { StarknetStream } from "@apibara/starknet";
 import type { ApibaraRuntimeConfig } from "apibara/types";
 import { redisPlugin } from "../lib/redis";
+import { webhookPlugin } from "../lib/webhook";
 import { websocketPlugin } from "lib/websocket";
 import { kafkaPlugin } from "../lib/kafka_producer";
 
@@ -129,40 +130,15 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
                 indexerId: indexerId,
             }),
 
-            // Add webhook plugin if URL is provided
-            //   webhookUrl && webhookPlugin<WebhookTransformedData>({
-            //     url: webhookUrl,
-            //     // Send data for both regular messages and finalized blocks
-            //     sendOnEveryMessage: true,
-            //     // Transform the data to a more convenient format for the webhook
-            //     transformData: ({block: {header, events, receipts}}) => {
-            //       return transformTokenEvents(header, events, receipts);
-            //     },
-            //     // Add retry logic
-            //     retry: {
-            //       maxAttempts: 5,
-            //       delayMs: 2000,
-            //     },
-            //   }),
-
-            // Use Kafka if brokers are configured
-            ...(kafkaBrokers && kafkaTopic ? [
-                kafkaPlugin({
-                    brokers: kafkaBrokers,
-                    topic: kafkaTopic,
-                    clientId: kafkaClientId || `tokenkit-indexer-${indexerId || 'default'}`,
+            // Webhook plugin - PRIMARY data delivery method (replacing Kafka)
+            ...(webhookUrl ? [
+                webhookPlugin<WebhookTransformedData>({
+                    url: webhookUrl,
                     // Send data for both regular messages and finalized blocks
                     sendOnEveryMessage: true,
-                    // Transform the data to a more convenient format for Kafka
+                    // Transform the data to a more convenient format for the webhook
                     transformData: ({ block: { header, events, receipts } }) => {
-                        const data = transformTokenEvents(header, events, receipts);
-                        // Use the explicit tenant schema from config, falling back to fixed values
-                        // This ensures we're always using the correct schema regardless of indexerId
-                        const tenant_schema = kafkaTenantSchema || 'mainnet';
-                        return {
-                            tenant_schema,
-                            ...data
-                        };
+                        return transformTokenEvents(header, events, receipts);
                     },
                     // Add retry logic
                     retry: {
@@ -171,21 +147,29 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
                     },
                 })
             ] : []),
-            
-            // Fallback to WebSocket if Kafka is not configured and WebSocket URL is provided
-            ...(websocketUrl && (!kafkaBrokers || !kafkaTopic) ? [
-                websocketPlugin({
-                    url: websocketUrl,
-                    // Send data for both regular messages and finalized blocks
-                    sendOnEveryMessage: true,
-                    // Add delay before sending data to the WebSocket (if configured)
-                    sendDelayMs: websocketDelayMs,
-                    // Transform the data to a more convenient format for the WebSocket
-                    transformData: ({ block: { header, events, receipts } }) => {
-                        return transformTokenEvents(header, events, receipts);
-                    },
-                })
-            ] : []),
+
+            // Kafka plugin - DISABLED (replaced by webhook)
+            // Uncomment if you need Kafka for high-throughput scenarios
+            // ...(kafkaBrokers && kafkaTopic ? [
+            //     kafkaPlugin({
+            //         brokers: kafkaBrokers,
+            //         topic: kafkaTopic,
+            //         clientId: kafkaClientId || `tokenkit-indexer-${indexerId || 'default'}`,
+            //         sendOnEveryMessage: true,
+            //         transformData: ({ block: { header, events, receipts } }) => {
+            //             const data = transformTokenEvents(header, events, receipts);
+            //             const tenant_schema = kafkaTenantSchema || 'mainnet';
+            //             return {
+            //                 tenant_schema,
+            //                 ...data
+            //             };
+            //         },
+            //         retry: {
+            //             maxAttempts: 5,
+            //             delayMs: 2000,
+            //         },
+            //     })
+            // ] : []),
 
         ].filter(Boolean),
 
@@ -216,7 +200,7 @@ function transformTokenEvents(header: any, events: any, receipts?: any) {
         let eventType = "";
         let decoded;
 
-        console.log("Event: ", event)
+        // console.log("Event: ", event)
 
         // Check if it's a TokenCreated event
         if (removeLeadingZeros(event.keys?.[0]) === removeLeadingZeros(tokenCreatedSelector)) {
@@ -239,13 +223,16 @@ function transformTokenEvents(header: any, events: any, receipts?: any) {
             eventType = "TokenUpgraded";
         }
 
+        // console.log("Decoded_event: ", decoded)
+
         if (decoded) {
             // const receipt = receipts?.find(
             //     (rx: any) => rx.meta.transactionIndex === decoded.transactionIndex
             // );
 
             // Convert the tokenId from Uint256 to a number
-            const tokenId = BigInt(decoded.args.id as string).toString();
+            const args: any = decoded.args;
+            const tokenId = BigInt(args.id as string).toString();
 
             tokens.push({
                 token_id: Number(tokenId),

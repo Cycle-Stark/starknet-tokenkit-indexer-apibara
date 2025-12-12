@@ -60,6 +60,8 @@ export default defineConfig({
         kafkaTopic: process.env.KAFKA_TOPIC_MAINNET_TRANSFERS,
         kafkaClientId: process.env.KAFKA_CLIENT_ID_TRANSFERS,
         kafkaTenantSchema: process.env.KAFKA_MAINNET_TENANT_SCHEMA,
+        // Webhook configuration
+        webhookUrl: process.env.TRANSFERS_MAINNET_WEBHOOK_URL,
       }
     },
     "sepolia-transfers": {
@@ -71,10 +73,7 @@ export default defineConfig({
         websocketUrl: process.env.TRANSFERS_SEPOLIA_WEBSOCKET_ENDPOINT,
         websocketDelayMs: Number(process.env.WEBSOCKET_DELAY_MS),
         // Kafka configuration
-        kafkaBrokers: process.env.KAFKA_BROKERS?.split(','),
-        kafkaTopic: process.env.KAFKA_TOPIC_SEPOLIA_TRANSFERS,
-        kafkaClientId: process.env.KAFKA_CLIENT_ID_TRANSFERS,
-        kafkaTenantSchema: process.env.KAFKA_SEPOLIA_TENANT_SCHEMA,
+        webhookUrl: process.env.TRANSFERS_SEPOLIA_WEBHOOK_URL,
       }
     },
   },
