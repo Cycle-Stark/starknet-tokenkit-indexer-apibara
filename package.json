@@ -18,11 +18,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@apibara/indexer": "next",
-    "@apibara/protocol": "next",
-    "@apibara/starknet": "next",
+    "@apibara/indexer": "2.1.0-beta.40",
+    "@apibara/protocol": "2.1.0-beta.40",
+    "@apibara/starknet": "2.1.0-beta.40",
     "@types/ws": "^8.18.1",
-    "apibara": "next",
+    "apibara": "2.1.0-beta.40",
     "ioredis": "^5.6.1",
     "kafkajs": "^2.2.4",
     "starknet": "^6.24.1",

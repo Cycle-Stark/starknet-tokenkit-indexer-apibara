@@ -10,8 +10,6 @@ import { StarknetStream } from "@apibara/starknet";
 import type { ApibaraRuntimeConfig } from "apibara/types";
 import { webhookPlugin } from "../lib/webhook";
 import { redisPlugin } from "../lib/redis";
-import { websocketPlugin } from "lib/websocket";
-import { kafkaPlugin } from "../lib/kafka_producer";
 
 const abi = [
   {
