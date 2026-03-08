@@ -11,7 +11,13 @@ import type { ApibaraRuntimeConfig } from "apibara/types";
 import { webhookPlugin } from "../lib/webhook";
 import { redisPlugin } from "../lib/redis";
 
-const abi = [
+// ERC20/ERC721 Transfer event ABI
+// NOTE: ERC20 Transfer(from, to, value) and ERC721 Transfer(from, to, tokenId)
+// have the SAME event selector — they are indistinguishable at the event level.
+// The backend handles this ambiguity via the chicken-and-egg pattern:
+// always store value in token_id, default to ERC20 logic, and recompute
+// balances when the token type is later determined.
+const transferAbi = [
   {
     kind: "struct",
     name: "Transfer",
@@ -36,14 +42,59 @@ const abi = [
   },
 ] satisfies Abi;
 
+// ERC1155 TransferSingle event ABI
+// TransferSingle has a DISTINCT selector from Transfer — no ambiguity.
+const transferSingleAbi = [
+  {
+    kind: "struct",
+    name: "TransferSingle",
+    type: "event",
+    members: [
+      {
+        kind: "data",
+        name: "operator",
+        type: "core::starknet::contract_address::ContractAddress",
+      },
+      {
+        kind: "data",
+        name: "from",
+        type: "core::starknet::contract_address::ContractAddress",
+      },
+      {
+        kind: "data",
+        name: "to",
+        type: "core::starknet::contract_address::ContractAddress",
+      },
+      {
+        kind: "data",
+        name: "id",
+        type: "core::integer::u256",
+      },
+      {
+        kind: "data",
+        name: "value",
+        type: "core::integer::u256",
+      },
+    ],
+  },
+] satisfies Abi;
+
 /**
- * Represents a token transfer event
+ * Represents a token transfer event.
+ *
+ * eventType distinguishes event sources:
+ * - "Transfer": standard ERC20/ERC721 Transfer(from, to, value)
+ *   value is amount for ERC20 or tokenId for ERC721 (ambiguous — backend resolves)
+ * - "TransferSingle": ERC1155 TransferSingle(operator, from, to, id, value)
+ *   tokenId is the NFT/SFT id, value is the amount
  */
 export interface Transfer {
   token: string;
   from: string;
   to: string;
   value: string;
+  tokenId?: string;       // ERC1155: the token id. For Transfer events, not set.
+  eventType: string;      // "Transfer" | "TransferSingle"
   txhash: string;
   timestamp: string;
   block: string;
@@ -103,10 +154,17 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
       }
     },
     filter: {
-      // FILL ME: contract address
       events: [
+        // ERC20/ERC721 Transfer(from, to, value)
         {
           keys: [getSelector("Transfer")],
+          includeReceipt: true,
+          includeTransaction: false,
+          transactionStatus: "all",
+        },
+        // ERC1155 TransferSingle(operator, from, to, id, value)
+        {
+          keys: [getSelector("TransferSingle")],
           includeReceipt: true,
           includeTransaction: false,
           transactionStatus: "all",
@@ -137,30 +195,63 @@ export default function (runtimeConfig: ApibaraRuntimeConfig) {
             const timestamp = header.timestamp.toISOString()
 
             for (const event of events || []) {
-              const decoded = decodeEvent({
-                abi,
+              // Try decoding as standard Transfer (ERC20/ERC721)
+              const decodedTransfer = decodeEvent({
+                abi: transferAbi,
                 event,
                 eventName: "Transfer",
                 strict: false,
               });
 
-              if (decoded) {
+              if (decodedTransfer) {
                 const receipt = receipts?.find(
-                  (rx: any) => rx.meta.transactionIndex === decoded.transactionIndex
+                  (rx: any) => rx.meta.transactionIndex === decodedTransfer.transactionIndex
                 );
-                const args: any = decoded.args;
+                const args: any = decodedTransfer.args;
                 transfers.push({
-                  token: decoded.address,
+                  token: decodedTransfer.address,
                   from: args.from as string,
                   to: args.to as string,
                   value: BigInt(args.value as string)?.toString(),
-                  txhash: decoded.transactionHash,
+                  eventType: "Transfer",
+                  txhash: decodedTransfer.transactionHash,
                   timestamp: timestamp,
                   block: blockNumber,
-                  status: decoded.transactionStatus,
+                  status: decodedTransfer.transactionStatus,
                   fee: receipt ? getActualFee(receipt) : "0",
                   feeUnit: receipt?.meta.actualFee.unit ?? "fri"
                 });
+                continue;
+              }
+
+              // Try decoding as ERC1155 TransferSingle
+              const decodedSingle = decodeEvent({
+                abi: transferSingleAbi,
+                event,
+                eventName: "TransferSingle",
+                strict: false,
+              });
+
+              if (decodedSingle) {
+                const receipt = receipts?.find(
+                  (rx: any) => rx.meta.transactionIndex === decodedSingle.transactionIndex
+                );
+                const args: any = decodedSingle.args;
+                transfers.push({
+                  token: decodedSingle.address,
+                  from: args.from as string,
+                  to: args.to as string,
+                  value: BigInt(args.value as string)?.toString(),
+                  tokenId: BigInt(args.id as string)?.toString(),
+                  eventType: "TransferSingle",
+                  txhash: decodedSingle.transactionHash,
+                  timestamp: timestamp,
+                  block: blockNumber,
+                  status: decodedSingle.transactionStatus,
+                  fee: receipt ? getActualFee(receipt) : "0",
+                  feeUnit: receipt?.meta.actualFee.unit ?? "fri"
+                });
+                continue;
               }
             }
 
